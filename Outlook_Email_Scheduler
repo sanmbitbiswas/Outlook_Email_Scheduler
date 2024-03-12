@@ -1,0 +1,49 @@
+Sub EmailScheduler()
+
+    Dim myOlApp As Outlook.Application
+    Dim MyItem As Outlook.MailItem
+    Dim sheet As Excel.Worksheet
+    Dim lastrow As Long
+    Dim location As Variant
+    Dim inputsubject As Variant
+    Dim textBody As Variant
+   
+
+   
+    'Ideally update the data on the sheet before sending and enter the location of the file path only once
+    Excel.Workbooks.Open ("Full Path of the Excel File")
+   
+    Set xlWB = Excel.ActiveWorkbook
+   
+    'this is assuming that the sheet name where the data is present is called - Sheet1	  
+    Set sheet = Sheets("Sheet1")
+    lastrow = sheet.Cells(sheet.Rows.Count, "A").End(xlUp).Row
+       
+    sheet.Activate
+   
+    For i = 2 To lastrow
+        Set myOlApp = CreateObject("Outlook.Application")
+        location = Cells(i, 10)     'filepath of the oft template file
+        Set MyItem = myOlApp.CreateItemFromTemplate(location)
+        MyItem.HTMLBody = MyItem.HTMLBody
+        With MyItem
+            '.Subject = inputsubject
+             MyItem.To = Cells(i, 6).Value
+            .HTMLBody = Replace(.HTMLBody, "%FirstName", Cells(i, 4).Value)
+            .HTMLBody = Replace(.HTMLBody, "%Company", Cells(i, 1).Value)     
+            .HTMLBody = Replace(.HTMLBody, "%Personalization", Cells(i, 8).Value)
+
+            'Change the font size to 10.5
+            MyItem.BodyFormat = olFormatRichText
+            MyItem.HTMLBody = "<span style='font-size:10.5pt;'>" & MyItem.HTMLBody & "</span>"                    
+            'Change the font family to Arial
+            MyItem.BodyFormat = olFormatHTML
+            MyItem.HTMLBody = "<span style='font-family:Arial;'>" & MyItem.HTMLBody & "</span>"       
+                       
+           
+            MyItem.DeferredDeliveryTime = Cells(i, 7).Value
+           
+            MyItem.Send
+        end With
+    Next i
+End Sub
